@@ -1,13 +1,15 @@
+# correction_logic.py
+
 import pandas as pd
 from thefuzz import fuzz
 
-from src.preprocessing import preprocess_name, extract_surname
+from src.preprocessing import preprocess_name, extract_surname, normalize_name
 
 
 def correct_names_in_excel(file_path, similarity_threshold=90):
     """
     Correct names in Excel sheets based on strong similarity to names in column 1,
-    focusing on surname-based corrections.
+    focusing on surname-based corrections and normalizing initials.
 
     Args:
         file_path (str): Path to the Excel file.
@@ -65,13 +67,16 @@ def correct_names_in_excel(file_path, similarity_threshold=90):
                     if not preprocessed_value:
                         continue
 
+                    # Normalize the name with respect to the surname
+                    normalized_value = normalize_name(preprocessed_value, surname)
+
                     # Extract the surname from the preprocessed value
-                    value_surname = extract_surname(preprocessed_value)
+                    value_surname = extract_surname(normalized_value)
 
                     # Calculate similarity score based on the surname
                     if value_surname and fuzz.ratio(value_surname, surname) >= similarity_threshold:
                         # If surnames match and values are different, correct it
-                        if preprocessed_value != correct_name:
+                        if normalized_value != correct_name:
                             # Make the correction in the DataFrame
                             df.iat[idx, col] = correct_name
 
